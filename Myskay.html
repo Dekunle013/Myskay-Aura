@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Myskay Aura - Where Fragrance Meets Artistry</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Myskay Aura</div>
+
+                <div class="search-container">
+                  <input type="text" id="searchInput" placeholder="Search for perfumes...">
+                  <button onclick="searchProducts()">🔍</button>
+                </div>
+
+                <div class="cart-icon" onclick="openCartModal()">
+                    🛒
+                    <span class="cart-count" id="cartCount">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Where Fragrance Meets Artistry</h1>
+            <p>Our passion for exceptional fragrance drives every decision we make. Through careful cultivation of relationships with both renowned perfumers and emerging talents, we've built a collection that reflects true olfactory expertise.</p>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products-section" id="products">
+        <div class="container">
+            <h2 class="section-title">Our Curated Collection</h2>
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be dynamically loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Checkout Section -->
+    <section class="checkout-section" id="checkoutSection">
+        <div class="container">
+            <div class="checkout-content">
+                <h2>Complete Your Order</h2>
+                <p style="margin-bottom: 2rem; color: #e2e8f0;">You're one step away from experiencing our curated fragrances. Click below to finalize your order through WhatsApp where we'll handle payment and shipping details personally.</p>
+                
+                <div class="order-summary" id="orderSummary">
+                    <!-- Order items will be displayed here -->
+                </div>
+                
+                <button class="btn whatsapp-btn" onclick="proceedToWhatsApp()">
+                    📱 Complete Order on WhatsApp
+                </button>
+                
+                <div style="margin-top: 2rem;">
+                    <button class="btn btn-secondary" onclick="backToProducts()">← Back to Products</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeCartModal()">&times;</span>
+            <h2>Your Cart</h2>
+            <div id="cartItems">
+                <!-- Cart items will be displayed here -->
+            </div>
+            <div style="margin-top: 2rem;">
+                <button class="btn" onclick="proceedToCheckout()" id="checkoutBtn">Proceed to Checkout</button>
+                <button class="btn btn-secondary" onclick="closeCartModal()" style="margin-left: 1rem;">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content product-modal-content">
+            <span class="close-modal" onclick="closeProductModal()">&times;</span>
+            <div id="productDetail">
+                <!-- Product details will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>
