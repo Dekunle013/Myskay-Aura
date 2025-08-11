@@ -12,7 +12,8 @@ const products = [
                 "base": "Ambroxan, Vanilla, Sandalwood"
                 },
                 "longevity": "8-10 hours on skin",
-                "sillage": "Moderate to Strong"
+                "sillage": "Moderate to Strong",
+                "image": "products-image/dior.jpg"
             },
             {
                 "id": 2,
@@ -26,7 +27,8 @@ const products = [
                 "base": "Musk, Sandalwood"
                 },
                 "longevity": "10-12 hours on skin",
-                "sillage": "Strong"
+                "sillage": "Strong",
+                "image": "products-image/abiyad.jpg"
             },
             {
                 "id": 3,
@@ -1409,10 +1411,12 @@ const products = [
             const grid = document.getElementById('productsGrid');
             grid.innerHTML = products.map(product => `
                 <div class="product-card" onclick="openProductModal(${product.id})">
-                    <div class="product-image">${product.emoji}</div>
+                <div class="product-image">
+                <img src="${product.image}" alt="${product.name}">
+                </div>
                     <h3 class="product-title">${product.name}</h3>
                     <p class="product-description">${product.description}</p>
-                    <div class="product-price">${product.price}</div>
+                    <div class="product-price">₦${product.price.toLocaleString()}</div>
                     <button class="btn" onclick="event.stopPropagation(); buyNow(${product.id})">Buy Now</button>
                 </div>
             `).join('');
