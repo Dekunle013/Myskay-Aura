@@ -1405,488 +1405,601 @@ const products = [
 ];
 
         let cart = [];
+let isLoggedIn = false; // Removed localStorage dependency
+let modalQuantity = 1;
+let currentSearchResults = [...(window.products || [])]; // Safety check for products array
 
-        // Load products
-        function loadProducts() {
-            const grid = document.getElementById('productsGrid');
-            grid.innerHTML = products.map(product => `
-                <div class="product-card" onclick="openProductModal(${product.id})">
-                <div class="product-image">
+// Load products
+function loadProducts() {
+    const grid = document.getElementById('productsGrid');
+    const products = window.products || [];
+    
+    if (products.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #e2e8f0;">No products available</div>';
+        return;
+    }
+    
+    grid.innerHTML = products.map(product => `
+        <div class="product-card" onclick="openProductModal(${product.id})">
+            <div class="product-image">
                 <img src="${product.image}" alt="${product.name}">
-                </div>
-                    <h3 class="product-title">${product.name}</h3>
-                    <p class="product-description">${product.description}</p>
-                    <div class="product-price">₦${product.price.toLocaleString()}</div>
-                    <button class="btn" onclick="event.stopPropagation(); buyNow(${product.id})">Buy Now</button>
-                </div>
-            `).join('');
-        }
+            </div>
+            <h3 class="product-title">${product.name}</h3>
+            <p class="product-description">${product.description}</p>
+            <div class="product-price">₦${product.price.toLocaleString()}</div>
+            <button class="btn" onclick="event.stopPropagation(); buyNow(${product.id})">Buy Now</button>
+        </div>
+    `).join('');
+}
 
-        // Open product detail modal
-        function openProductModal(productId) {
-            const product = products.find(p => p.id === productId);
-            const productDetail = document.getElementById('productDetail');
-            
-            productDetail.innerHTML = `
-                <div class="product-detail-header">
-                    <div class="product-detail-image">${product.emoji}</div>
-                    <div class="product-detail-info">
-                        <h2 class="product-detail-title">${product.name}</h2>
-                        <div class="product-detail-price">${product.price}</div>
-                        <p class="product-detail-description">${product.detailedDescription}</p>
-                    </div>
-                </div>
-                
-                <div class="fragrance-notes">
-                    <h3 style="color: #ffd700; margin-bottom: 1rem;">Fragrance Notes</h3>
-                    <div class="notes-category">
-                        <h4>Top Notes</h4>
-                        <div class="notes-list">${product.notes.top}</div>
-                    </div>
-                    <div class="notes-category">
-                        <h4>Heart Notes</h4>
-                        <div class="notes-list">${product.notes.middle}</div>
-                    </div>
-                    <div class="notes-category">
-                        <h4>Base Notes</h4>
-                        <div class="notes-list">${product.notes.base}</div>
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px;">
-                    <div>
-                        <h4 style="color: #ffd700; margin-bottom: 0.5rem;">Longevity</h4>
-                        <div style="color: #e2e8f0;">${product.longevity}</div>
-                    </div>
-                    <div>
-                        <h4 style="color: #ffd700; margin-bottom: 0.5rem;">Sillage</h4>
-                        <div style="color: #e2e8f0;">${product.sillage}</div>
-                    </div>
-                </div>
-                
-                <div class="quantity-selector">
-                    <span class="quantity-label">Quantity:</span>
-                    <div class="quantity-controls">
-                        <button class="quantity-btn" onclick="changeModalQuantity(-1)">-</button>
-                        <span class="quantity-display" id="modalQuantity">1</span>
-                        <button class="quantity-btn" onclick="changeModalQuantity(1)">+</button>
-                    </div>
-                </div>
-                
-                <div class="product-actions">
-                    <button class="btn btn-large" onclick="addToCartFromModal(${product.id})">
-                        🛒 Add to Cart
-                    </button>
-                    <button class="btn btn-large whatsapp-btn" onclick="buyNowFromModal(${product.id})">
-                        📱 Buy Now
-                    </button>
-                </div>
-            `;
-            
-            document.getElementById('modalQuantity').textContent = '1';
-            document.getElementById('productModal').style.display = 'flex';
-        }
+// Open product detail modal
+function openProductModal(productId) {
+    const products = window.products || [];
+    const product = products.find(p => p.id === productId);
+    
+    if (!product) return;
+    
+    const productDetail = document.getElementById('productDetail');
+    
+    productDetail.innerHTML = `
+        <div class="product-detail-header">
+            <div class="product-detail-image">
+                <img src="${product.image}" alt="${product.name}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px;">
+            </div>
+            <div class="product-detail-info">
+                <h2 class="product-detail-title">${product.name}</h2>
+                <div class="product-detail-price">₦${product.price.toLocaleString()}</div>
+                <p class="product-detail-description">${product.detailedDescription || product.description}</p>
+            </div>
+        </div>
+        
+        ${product.notes ? `
+        <div class="fragrance-notes">
+            <h3 style="color: #ffd700; margin-bottom: 1rem;">Fragrance Notes</h3>
+            <div class="notes-category">
+                <h4>Top Notes</h4>
+                <div class="notes-list">${product.notes.top}</div>
+            </div>
+            <div class="notes-category">
+                <h4>Heart Notes</h4>
+                <div class="notes-list">${product.notes.middle}</div>
+            </div>
+            <div class="notes-category">
+                <h4>Base Notes</h4>
+                <div class="notes-list">${product.notes.base}</div>
+            </div>
+        </div>
+        ` : ''}
+        
+        ${(product.longevity || product.sillage) ? `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px;">
+            ${product.longevity ? `
+            <div>
+                <h4 style="color: #ffd700; margin-bottom: 0.5rem;">Longevity</h4>
+                <div style="color: #e2e8f0;">${product.longevity}</div>
+            </div>
+            ` : ''}
+            ${product.sillage ? `
+            <div>
+                <h4 style="color: #ffd700; margin-bottom: 0.5rem;">Sillage</h4>
+                <div style="color: #e2e8f0;">${product.sillage}</div>
+            </div>
+            ` : ''}
+        </div>
+        ` : ''}
+        
+        <div class="quantity-selector">
+            <span class="quantity-label">Quantity:</span>
+            <div class="quantity-controls">
+                <button class="quantity-btn" onclick="changeModalQuantity(-1)">-</button>
+                <span class="quantity-display" id="modalQuantity">1</span>
+                <button class="quantity-btn" onclick="changeModalQuantity(1)">+</button>
+            </div>
+        </div>
+        
+        <div class="product-actions">
+            <button class="btn btn-large" onclick="addToCartFromModal(${product.id})">
+                🛒 Add to Cart
+            </button>
+            <button class="btn btn-large whatsapp-btn" onclick="buyNowFromModal(${product.id})">
+                📱 Buy Now
+            </button>
+        </div>
+    `;
+    
+    modalQuantity = 1;
+    document.getElementById('modalQuantity').textContent = '1';
+    document.getElementById('productModal').style.display = 'flex';
+}
 
-        // Search functionality
-        let currentSearchResults = [...products];
-        
-        function searchProducts() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            
-            if (!query) {
-                currentSearchResults = [...products];
-                loadProducts();
-                return;
-            }
-            
-            // Filter products based on search query
-            const results = products.filter(product => {
-                return (
-                    product.name.toLowerCase().includes(query) ||
-                    product.description.toLowerCase().includes(query) ||
-                    product.detailedDescription.toLowerCase().includes(query) ||
-                    product.notes.top.toLowerCase().includes(query) ||
-                    product.notes.middle.toLowerCase().includes(query) ||
-                    product.notes.base.toLowerCase().includes(query)
-                );
-            });
-            
-            currentSearchResults = results;
-            displaySearchResults(results, query);
-        }
-        
-        function displaySearchResults(results, query) {
-            const grid = document.getElementById('productsGrid');
-            
-            if (results.length === 0) {
-                // No results found - show recommendations
-                const recommendations = getRecommendations(query);
-                grid.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
-                        <h2 style="color: #ffd700; margin-bottom: 1rem;">No products found for "${query}"</h2>
-                        <p style="color: #e2e8f0; margin-bottom: 2rem;">But here are some popular alternatives you might like:</p>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
-                            ${recommendations.map(product => `
-                                <div class="product-card" onclick="openProductModal(${product.id})">
-                                    <div class="product-image">${product.emoji}</div>
-                                    <h3 class="product-title">${product.name}</h3>
-                                    <p class="product-description">${product.description}</p>
-                                    <div class="product-price">₦${product.price.toLocaleString()}</div>
-                                    <button class="btn" onclick="event.stopPropagation(); buyNow(${product.id})">Buy Now</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <button class="btn btn-large" onclick="clearSearch()" style="margin-top: 2rem;">
-                            Continue Shopping
-                        </button>
-                    </div>
-                `;
-            } else {
-                // Show search results
-                grid.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; margin-bottom: 2rem;">
-                        <h2 style="color: #ffd700;">Found ${results.length} product${results.length === 1 ? '' : 's'} for "${query}"</h2>
-                        <button class="btn btn-secondary" onclick="clearSearch()" style="margin-top: 1rem;">
-                            Show All Products
-                        </button>
-                    </div>
-                    ${results.map(product => `
+// Close product modal
+function closeProductModal() {
+    document.getElementById('productModal').style.display = 'none';
+    modalQuantity = 1;
+}
+
+// Change quantity in modal
+function changeModalQuantity(change) {
+    modalQuantity = Math.max(1, modalQuantity + change);
+    document.getElementById('modalQuantity').textContent = modalQuantity;
+}
+
+// Add to cart from modal
+function addToCartFromModal(productId) {
+     if (!isLoggedIn) {
+        closeProductModal();
+        openLoginModal();
+        return;
+    }
+    
+    const products = window.products || [];
+    const product = products.find(p => p.id === productId);
+    
+    if (!product) return;
+    
+    const existingItem = cart.find(item => item.id === productId);
+    
+    if (existingItem) {
+        existingItem.quantity += modalQuantity;
+    } else {
+        cart.push({ ...product, quantity: modalQuantity });
+    }
+    
+    updateCartCount();
+    showNotification(`${modalQuantity} x ${product.name} added to cart!`);
+    closeProductModal();
+}
+
+// Buy now from modal
+function buyNowFromModal(productId) {
+    if (!isLoggedIn) {
+        openLoginModal();
+        return;
+    }
+    
+    const products = window.products || [];
+    const product = products.find(p => p.id === productId);
+    
+    if (!product) return;
+    
+    cart = [{ ...product, quantity: modalQuantity }];
+    updateCartCount();
+    closeProductModal();
+    proceedToCheckout();
+}
+
+// Buy now (single item)
+function buyNow(productId) {
+    if (!isLoggedIn) {
+        openLoginModal();
+        return;
+    }
+    
+    const products = window.products || [];
+    const product = products.find(p => p.id === productId);
+    
+    if (!product) return;
+    
+    cart = [{ ...product, quantity: 1 }];
+    updateCartCount();
+    proceedToCheckout();
+}
+
+// Search functionality
+function searchProducts() {
+    const products = window.products || [];
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    
+    if (!query) {
+        currentSearchResults = [...products];
+        loadProducts();
+        return;
+    }
+    
+    const results = products.filter(product => {
+        return (
+            product.name.toLowerCase().includes(query) ||
+            product.description.toLowerCase().includes(query) ||
+            (product.detailedDescription && product.detailedDescription.toLowerCase().includes(query)) ||
+            (product.notes && (
+                product.notes.top.toLowerCase().includes(query) ||
+                product.notes.middle.toLowerCase().includes(query) ||
+                product.notes.base.toLowerCase().includes(query)
+            ))
+        );
+    });
+    
+    currentSearchResults = results;
+    displaySearchResults(results, query);
+}
+
+function displaySearchResults(results, query) {
+    const grid = document.getElementById('productsGrid');
+    
+    if (results.length === 0) {
+        const recommendations = getRecommendations(query);
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                <h2 style="color: #ffd700; margin-bottom: 1rem;">No products found for "${query}"</h2>
+                <p style="color: #e2e8f0; margin-bottom: 2rem;">But here are some popular alternatives you might like:</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    ${recommendations.map(product => `
                         <div class="product-card" onclick="openProductModal(${product.id})">
-                            <div class="product-image">${product.emoji}</div>
+                            <div class="product-image">
+                                <img src="${product.image}" alt="${product.name}">
+                            </div>
                             <h3 class="product-title">${product.name}</h3>
                             <p class="product-description">${product.description}</p>
                             <div class="product-price">₦${product.price.toLocaleString()}</div>
                             <button class="btn" onclick="event.stopPropagation(); buyNow(${product.id})">Buy Now</button>
                         </div>
                     `).join('')}
-                `;
-            }
-        }
-        
-        function getRecommendations(query) {
-            // Popular and trending products to recommend
-            const popularProducts = [
-                13, // Creed Aventus
-                14, // Maison Francis Kurkdjian Baccarat Rouge 540
-                1,  // Dior Sauvage
-                18, // Le Labo Santal 33
-                16, // Parfums De Marly Delina
-                2,  // Sapphire Scents Oud Abiyad
-                12, // Giorgio Armani Acqua di Giò
-                15, // Tom Ford Noir Extreme
-            ];
-            
-            // Get recommendations based on query type
-            let recommendations = [];
-            
-            // Check for specific categories or notes
-            if (query.includes('oud') || query.includes('arabic')) {
-                recommendations = products.filter(p => 
-                    p.notes.top.toLowerCase().includes('oud') || 
-                    p.notes.middle.toLowerCase().includes('oud') || 
-                    p.notes.base.toLowerCase().includes('oud') ||
-                    p.name.toLowerCase().includes('oud')
-                ).slice(0, 6);
-            } else if (query.includes('vanilla') || query.includes('sweet')) {
-                recommendations = products.filter(p => 
-                    p.notes.top.toLowerCase().includes('vanilla') || 
-                    p.notes.middle.toLowerCase().includes('vanilla') || 
-                    p.notes.base.toLowerCase().includes('vanilla') ||
-                    p.description.toLowerCase().includes('sweet')
-                ).slice(0, 6);
-            } else if (query.includes('fresh') || query.includes('citrus')) {
-                recommendations = products.filter(p => 
-                    p.notes.top.toLowerCase().includes('bergamot') || 
-                    p.notes.top.toLowerCase().includes('lemon') || 
-                    p.notes.top.toLowerCase().includes('citrus') ||
-                    p.description.toLowerCase().includes('fresh')
-                ).slice(0, 6);
-            } else if (query.includes('woody') || query.includes('sandalwood')) {
-                recommendations = products.filter(p => 
-                    p.notes.base.toLowerCase().includes('sandalwood') || 
-                    p.notes.base.toLowerCase().includes('cedarwood') || 
-                    p.notes.middle.toLowerCase().includes('cedar') ||
-                    p.description.toLowerCase().includes('woody')
-                ).slice(0, 6);
-            } else if (query.includes('rose') || query.includes('floral')) {
-                recommendations = products.filter(p => 
-                    p.notes.top.toLowerCase().includes('rose') || 
-                    p.notes.middle.toLowerCase().includes('rose') || 
-                    p.notes.middle.toLowerCase().includes('jasmine') ||
-                    p.description.toLowerCase().includes('floral')
-                ).slice(0, 6);
-            } else {
-                // Default to popular products
-                recommendations = popularProducts.map(id => products.find(p => p.id === id)).filter(Boolean).slice(0, 6);
-            }
-            
-            // If still no recommendations, get popular ones
-            if (recommendations.length === 0) {
-                recommendations = popularProducts.map(id => products.find(p => p.id === id)).filter(Boolean).slice(0, 6);
-            }
-            
-            return recommendations;
-        }
-        
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            currentSearchResults = [...products];
-            loadProducts();
-        }
-        
-        // Enable search on Enter key press
-        function handleSearchKeyPress(event) {
-            if (event.key === 'Enter') {
-                searchProducts();
-            }
-        }
-        
-        // Handle real-time search input changes
-        function handleSearchInput(event) {
-            const query = event.target.value.toLowerCase().trim();
-            
-            // If search box is empty, return to main products page
-            if (!query) {
-                currentSearchResults = [...products];
-                loadProducts();
-                return;
-            }
-            
-            // Optional: Add debounced search for better performance
-            // You can uncomment this if you want search-as-you-type functionality
-            // clearTimeout(window.searchTimeout);
-            // window.searchTimeout = setTimeout(() => {
-            //     searchProducts();
-            // }, 300);
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadProducts();
-            updateCartCount();
-            
-            // Add search event listeners
-            document.getElementById('searchInput').addEventListener('keypress', handleSearchKeyPress);
-            document.getElementById('searchInput').addEventListener('input', handleSearchInput);
-            
-            // Reset modal quantity when clicking outside modals
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('modal')) {
-                    modalQuantity = 1;
-                }
-            });
-        });
-
-        // Close product modal
-        function closeProductModal() {
-            document.getElementById('productModal').style.display = 'none';
-        }
-
-        // Change quantity in modal
-        let modalQuantity = 1;
-        function changeModalQuantity(change) {
-            modalQuantity = Math.max(1, modalQuantity + change);
-            document.getElementById('modalQuantity').textContent = modalQuantity;
-        }
-
-        // Add to cart from modal
-        function addToCartFromModal(productId) {
-            const product = products.find(p => p.id === productId);
-            const existingItem = cart.find(item => item.id === productId);
-            
-            if (existingItem) {
-                existingItem.quantity += modalQuantity;
-            } else {
-                cart.push({ ...product, quantity: modalQuantity });
-            }
-            
-            updateCartCount();
-            showNotification(`${modalQuantity} x ${product.name} added to cart!`);
-            closeProductModal();
-            modalQuantity = 1;
-        }
-
-        // Buy now from modal
-        function buyNowFromModal(productId) {
-            const product = products.find(p => p.id === productId);
-            cart = [{ ...product, quantity: modalQuantity }];
-            updateCartCount();
-            closeProductModal();
-            modalQuantity = 1;
-            proceedToCheckout();
-        }
-
-        // Buy now (single item) - only used for Buy Now button on product cards
-        function buyNow(productId) {
-            const product = products.find(p => p.id === productId);
-            cart = [{ ...product, quantity: 1 }];
-            updateCartCount();
-            proceedToCheckout();
-        }
-
-        // Update cart count
-        function updateCartCount() {
-            const count = cart.reduce((total, item) => total + item.quantity, 0);
-            document.getElementById('cartCount').textContent = count;
-        }
-
-        // Open cart modal
-        function openCartModal() {
-            if (cart.length === 0) {
-                showNotification('Your cart is empty');
-                return;
-            }
-            
-            const cartItems = document.getElementById('cartItems');
-            cartItems.innerHTML = cart.map(item => `
-                <div class="cart-item">
-                    <div class="cart-item-info">
-                        <strong>${item.name}</strong><br>
-                        <span style="color: #ffd700;">$${item.price}</span>
-                    </div>
-                    <div class="cart-item-controls">
-                        <button class="quantity-btn" onclick="changeQuantity(${item.id}, -1)">-</button>
-                        <span style="margin: 0 10px;">${item.quantity}</span>
-                        <button class="quantity-btn" onclick="changeQuantity(${item.id}, 1)">+</button>
-                        <button class="btn btn-secondary" onclick="removeFromCart(${item.id})" style="margin-left: 10px; padding: 5px 10px;">Remove</button>
-                    </div>
                 </div>
-            `).join('');
-            
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            cartItems.innerHTML += `<div style="text-align: center; margin-top: 1rem; font-size: 1.2rem; color: #ffd700;"><strong>Total: $${total.toFixed(2)}</strong></div>`;
-            
-            document.getElementById('cartModal').style.display = 'flex';
-        }
-
-        // Close cart modal
-        function closeCartModal() {
-            document.getElementById('cartModal').style.display = 'none';
-        }
-
-        // Change quantity
-        function changeQuantity(productId, change) {
-            const item = cart.find(item => item.id === productId);
-            if (item) {
-                item.quantity += change;
-                if (item.quantity <= 0) {
-                    removeFromCart(productId);
-                    return;
-                }
-            }
-            updateCartCount();
-            openCartModal(); // Refresh the modal
-        }
-
-        // Remove from cart
-        function removeFromCart(productId) {
-            cart = cart.filter(item => item.id !== productId);
-            updateCartCount();
-            if (cart.length === 0) {
-                closeCartModal();
-            } else {
-                openCartModal(); // Refresh the modal
-            }
-        }
-
-        // Proceed to checkout
-        function proceedToCheckout() {
-            if (cart.length === 0) {
-                showNotification('Your cart is empty');
-                return;
-            }
-            
-            closeCartModal();
-            
-            // Show checkout section
-            document.getElementById('products').style.display = 'none';
-            document.querySelector('.hero').style.display = 'none';
-            document.getElementById('checkoutSection').style.display = 'block';
-            
-            // Display order summary
-            const orderSummary = document.getElementById('orderSummary');
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            orderSummary.innerHTML = `
-                <h3 style="color: #ffd700; margin-bottom: 1rem;">Order Summary</h3>
-                ${cart.map(item => `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span>${item.name} (x${item.quantity})</span>
-                        <span>$${(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                `).join('')}
-                <hr style="margin: 1rem 0; border-color: #ffd700;">
-                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem;">
-                    <span>Total:</span>
-                    <span>$${total.toFixed(2)}</span>
-                </div>
-            `;
-        }
-
-        // Proceed to WhatsApp
-        function proceedToWhatsApp() {
-            const orderText = cart.map(item => `${item.name} (x${item.quantity}) - $${(item.price * item.quantity).toFixed(2)}`).join('\n');
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            const message = `Hello! I'd like to place an order from Myskay Aura:\n\n${orderText}\n\nTotal: $${total.toFixed(2)}\n\nPlease let me know about payment and shipping details. Thank you!`;
-            
-            // Replace with your actual WhatsApp number
-            const whatsappNumber = "1234567890"; // Replace with your WhatsApp number
-            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-            
-            window.open(whatsappUrl, '_blank');
-        }
-
-        // Back to products
-        function backToProducts() {
-            document.getElementById('checkoutSection').style.display = 'none';
-            document.getElementById('products').style.display = 'block';
-            document.querySelector('.hero').style.display = 'block';
-        }
-
-        // Show notification
-        function showNotification(message) {
-            // Simple notification - you can enhance this
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                right: 20px;
-                background: #ffd700;
-                color: #000;
-                padding: 1rem 2rem;
-                border-radius: 5px;
-                font-weight: bold;
-                z-index: 3000;
-                animation: slideIn 0.3s ease;
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadProducts();
-            updateCartCount();
-            
-            // Reset modal quantity when clicking outside modals
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('modal')) {
-                    modalQuantity = 1;
-                }
-            });
-        });
-
-        // Add CSS animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
+                <button class="btn btn-large" onclick="clearSearch()" style="margin-top: 2rem;">
+                    Continue Shopping
+                </button>
+            </div>
         `;
-        document.head.appendChild(style);
+    } else {
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: #ffd700;">Found ${results.length} product${results.length === 1 ? '' : 's'} for "${query}"</h2>
+                <button class="btn btn-secondary" onclick="clearSearch()" style="margin-top: 1rem;">
+                    Show All Products
+                </button>
+            </div>
+            ${results.map(product => `
+                <div class="product-card" onclick="openProductModal(${product.id})">
+                    <div class="product-image">
+                        <img src="${product.image}" alt="${product.name}">
+                    </div>
+                    <h3 class="product-title">${product.name}</h3>
+                    <p class="product-description">${product.description}</p>
+                    <div class="product-price">₦${product.price.toLocaleString()}</div>
+                    <button class="btn" onclick="event.stopPropagation(); buyNow(${product.id})">Buy Now</button>
+                </div>
+            `).join('')}
+        `;
+    }
+}
+
+function getRecommendations(query) {
+    const products = window.products || [];
+    const popularProductIds = [13, 14, 1, 18, 16, 2, 12, 15];
+    
+    let recommendations = [];
+    
+    // Category-based recommendations
+    if (query.includes('oud') || query.includes('arabic')) {
+        recommendations = products.filter(p => 
+            (p.notes && (
+                p.notes.top.toLowerCase().includes('oud') || 
+                p.notes.middle.toLowerCase().includes('oud') || 
+                p.notes.base.toLowerCase().includes('oud')
+            )) ||
+            p.name.toLowerCase().includes('oud')
+        ).slice(0, 6);
+    } else if (query.includes('vanilla') || query.includes('sweet')) {
+        recommendations = products.filter(p => 
+            (p.notes && (
+                p.notes.top.toLowerCase().includes('vanilla') || 
+                p.notes.middle.toLowerCase().includes('vanilla') || 
+                p.notes.base.toLowerCase().includes('vanilla')
+            )) ||
+            p.description.toLowerCase().includes('sweet')
+        ).slice(0, 6);
+    } else if (query.includes('fresh') || query.includes('citrus')) {
+        recommendations = products.filter(p => 
+            (p.notes && (
+                p.notes.top.toLowerCase().includes('bergamot') || 
+                p.notes.top.toLowerCase().includes('lemon') || 
+                p.notes.top.toLowerCase().includes('citrus')
+            )) ||
+            p.description.toLowerCase().includes('fresh')
+        ).slice(0, 6);
+    } else if (query.includes('woody') || query.includes('sandalwood')) {
+        recommendations = products.filter(p => 
+            (p.notes && (
+                p.notes.base.toLowerCase().includes('sandalwood') || 
+                p.notes.base.toLowerCase().includes('cedarwood') || 
+                p.notes.middle.toLowerCase().includes('cedar')
+            )) ||
+            p.description.toLowerCase().includes('woody')
+        ).slice(0, 6);
+    } else if (query.includes('rose') || query.includes('floral')) {
+        recommendations = products.filter(p => 
+            (p.notes && (
+                p.notes.top.toLowerCase().includes('rose') || 
+                p.notes.middle.toLowerCase().includes('rose') || 
+                p.notes.middle.toLowerCase().includes('jasmine')
+            )) ||
+            p.description.toLowerCase().includes('floral')
+        ).slice(0, 6);
+    }
+    
+    // Fallback to popular products
+    if (recommendations.length === 0) {
+        recommendations = popularProductIds
+            .map(id => products.find(p => p.id === id))
+            .filter(Boolean)
+            .slice(0, 6);
+    }
+    
+    return recommendations;
+}
+
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    currentSearchResults = [...(window.products || [])];
+    loadProducts();
+}
+
+function handleSearchKeyPress(event) {
+    if (event.key === 'Enter') {
+        searchProducts();
+    }
+}
+
+function handleSearchInput(event) {
+    const query = event.target.value.toLowerCase().trim();
+    
+    if (!query) {
+        currentSearchResults = [...(window.products || [])];
+        loadProducts();
+        return;
+    }
+}
+
+// Cart functionality
+function updateCartCount() {
+    const count = cart.reduce((total, item) => total + item.quantity, 0);
+    const cartCountElement = document.getElementById('cartCount');
+    if (cartCountElement) {
+        cartCountElement.textContent = count;
+    }
+}
+
+function openCartModal() {
+    if (cart.length === 0) {
+        showNotification('Your cart is empty');
+        return;
+    }
+    
+    const cartItems = document.getElementById('cartItems');
+    if (!cartItems) return;
+    
+    cartItems.innerHTML = cart.map(item => `
+        <div class="cart-item">
+            <div class="cart-item-info">
+                <strong>${item.name}</strong><br>
+                <span style="color: #ffd700;">₦${item.price.toLocaleString()}</span>
+            </div>
+            <div class="cart-item-controls">
+                <button class="quantity-btn" onclick="changeQuantity(${item.id}, -1)">-</button>
+                <span style="margin: 0 10px;">${item.quantity}</span>
+                <button class="quantity-btn" onclick="changeQuantity(${item.id}, 1)">+</button>
+                <button class="btn btn-secondary" onclick="removeFromCart(${item.id})" style="margin-left: 10px; padding: 5px 10px;">Remove</button>
+            </div>
+        </div>
+    `).join('');
+    
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    cartItems.innerHTML += `<div style="text-align: center; margin-top: 1rem; font-size: 1.2rem; color: #ffd700;"><strong>Total: ₦${total.toLocaleString()}</strong></div>`;
+    
+    const cartModal = document.getElementById('cartModal');
+    if (cartModal) {
+        cartModal.style.display = 'flex';
+    }
+}
+
+function closeCartModal() {
+    const cartModal = document.getElementById('cartModal');
+    if (cartModal) {
+        cartModal.style.display = 'none';
+    }
+}
+
+function changeQuantity(productId, change) {
+    const item = cart.find(item => item.id === productId);
+    if (item) {
+        item.quantity += change;
+        if (item.quantity <= 0) {
+            removeFromCart(productId);
+            return;
+        }
+    }
+    updateCartCount();
+    openCartModal();
+}
+
+function removeFromCart(productId) {
+    cart = cart.filter(item => item.id !== productId);
+    updateCartCount();
+    if (cart.length === 0) {
+        closeCartModal();
+    } else {
+        openCartModal();
+    }
+}
+
+// Checkout functionality
+function proceedToCheckout() {
+    if (cart.length === 0) {
+        showNotification('Your cart is empty');
+        return;
+    }
+    
+    closeCartModal();
+    
+    const productsSection = document.getElementById('products');
+    const heroSection = document.querySelector('.hero');
+    const checkoutSection = document.getElementById('checkoutSection');
+    
+    if (productsSection) productsSection.style.display = 'none';
+    if (heroSection) heroSection.style.display = 'none';
+    if (checkoutSection) checkoutSection.style.display = 'block';
+    
+    const orderSummary = document.getElementById('orderSummary');
+    if (orderSummary) {
+        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        orderSummary.innerHTML = `
+            <h3 style="color: #ffd700; margin-bottom: 1rem;">Order Summary</h3>
+            ${cart.map(item => `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>${item.name} (x${item.quantity})</span>
+                    <span>₦${(item.price * item.quantity).toLocaleString()}</span>
+                </div>
+            `).join('')}
+            <hr style="margin: 1rem 0; border-color: #ffd700;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem;">
+                <span>Total:</span>
+                <span>₦${total.toLocaleString()}</span>
+            </div>
+        `;
+    }
+}
+
+function proceedToWhatsApp() {
+    const orderText = cart.map(item => `${item.name} (x${item.quantity}) - ₦${(item.price * item.quantity).toLocaleString()}`).join('\n');
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    const message = `Hello! I'd like to place an order from Myskay Aura:\n\n${orderText}\n\nTotal: ₦${total.toLocaleString()}\n\nPlease let me know about payment and shipping details. Thank you!`;
+    
+    const whatsappNumber = "1234567890"; // Replace with your actual WhatsApp number
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    
+    window.open(whatsappUrl, '_blank');
+}
+
+function backToProducts() {
+    const productsSection = document.getElementById('products');
+    const heroSection = document.querySelector('.hero');
+    const checkoutSection = document.getElementById('checkoutSection');
+    
+    if (checkoutSection) checkoutSection.style.display = 'none';
+    if (productsSection) productsSection.style.display = 'block';
+    if (heroSection) heroSection.style.display = 'block';
+}
+
+// Login functionality (using in-memory state instead of localStorage)
+function toggleProfileMenu() {
+    const menu = document.getElementById("profileMenu");
+    if (menu) {
+          const isVisible = menu.style.display === "block";
+        menu.style.display = isVisible ? "none" : "block";
+        updateProfileMenu();
+    }
+}
+
+function updateProfileMenu() {
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    
+    if (loginBtn) loginBtn.style.display = isLoggedIn ? "none" : "block";
+    if (logoutBtn) logoutBtn.style.display = isLoggedIn ? "block" : "none";
+}
+
+function openLoginModal() {
+    const loginModal = document.getElementById("loginModal");
+    if (loginModal) {
+        loginModal.style.display = "block";
+    }
+}
+
+function closeLoginModal() {
+    const loginModal = document.getElementById("loginModal");
+    if (loginModal) {
+        loginModal.style.display = "none";
+    }
+}
+
+function loginUser() {
+    const username = document.getElementById("username")?.value;
+    const password = document.getElementById("password")?.value;
+
+    if (username && password) {
+        isLoggedIn = true;
+        showNotification("Login successful!");
+        closeLoginModal();
+        updateProfileMenu();
+    } else {
+        showNotification("Please enter both username and password.");
+    }
+}
+
+function logoutUser() {
+    isLoggedIn = false;
+    showNotification("You have been logged out.");
+    updateProfileMenu();
+}
+
+// Utility functions
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: #ffd700;
+        color: #000;
+        padding: 1rem 2rem;
+        border-radius: 5px;
+        font-weight: bold;
+        z-index: 3000;
+        animation: slideIn 0.3s ease;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Add CSS animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
+
+// Event listeners and initialization
+document.addEventListener('DOMContentLoaded', function() {
+    loadProducts();
+    updateCartCount();
+    updateProfileMenu();
+    
+    // Add search event listeners
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', handleSearchKeyPress);
+        searchInput.addEventListener('input', handleSearchInput);
+    }
+    
+    // Close modals when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            modalQuantity = 1;
+        }
+        
+        // Close profile menu if clicked outside
+        if (!e.target.closest(".profile-icon") && !e.target.closest("#profileMenu")) {
+            const profileMenu = document.getElementById("profileMenu");
+            if (profileMenu) {
+                profileMenu.style.display = "none";
+            }
+        }
+        
+        // Close login modal when clicking outside it
+        if (e.target === document.getElementById("loginModal")) {
+            closeLoginModal();
+        }
+    });
+});

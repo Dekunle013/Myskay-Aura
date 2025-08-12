@@ -22,9 +22,46 @@
                     🛒
                     <span class="cart-count" id="cartCount">0</span>
                 </div>
+
+                <div class="profile-icon" onclick="toggleProfileMenu()">
+                    👤
+                    <div id="profileMenu" class="profile-menu">
+                        <button id="loginBtn" onclick="openLoginModal()">Login</button>
+                        <button id="logoutBtn" onclick="logoutUser()">Logout</button>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="close" onclick="closeLoginModal()">&times;</span>
+        <h2 style="color: #ffd700; text-align: center; margin-bottom: 2rem;">Login to Continue</h2>
+        
+        <form onsubmit="loginUser(); return false;">
+            <div style="margin-bottom: 1rem;">
+                <label for="username" style="display: block; margin-bottom: 0.5rem; color: #e2e8f0;">Username:</label>
+                <input type="text" id="username" required style="width: 100%; padding: 0.75rem; border: 1px solid #ffd700; border-radius: 5px; background: #2a2a2a; color: #e2e8f0;">
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <label for="password" style="display: block; margin-bottom: 0.5rem; color: #e2e8f0;">Password:</label>
+                <input type="password" id="password" required style="width: 100%; padding: 0.75rem; border: 1px solid #ffd700; border-radius: 5px; background: #2a2a2a; color: #e2e8f0;">
+            </div>
+            
+            <button type="submit" class="btn btn-large" style="width: 100%; margin-bottom: 1rem;">
+                Login
+            </button>
+        </form>
+        
+        <p style="text-align: center; color: #e2e8f0;">
+            Don't have an account? 
+            <a href="#" onclick="showNotification('Sign up feature coming soon!')" style="color: #ffd700; text-decoration: none;">Sign up here</a>
+        </p>
+    </div>
+</div>
 
     <!-- Hero Section -->
     <section class="hero">
