@@ -1404,7 +1404,7 @@ const products = [
             }
 ];
 
-        let cart = [];
+let cart = [];
 let isLoggedIn = false; // Removed localStorage dependency
 let modalQuantity = 1;
 let currentSearchResults = [...(window.products || [])]; // Safety check for products array
@@ -1526,7 +1526,7 @@ function changeModalQuantity(change) {
 
 // Add to cart from modal
 function addToCartFromModal(productId) {
-     if (!isLoggedIn) {
+    if (!isLoggedIn) {
         closeProductModal();
         openLoginModal();
         return;
@@ -1553,6 +1553,7 @@ function addToCartFromModal(productId) {
 // Buy now from modal
 function buyNowFromModal(productId) {
     if (!isLoggedIn) {
+        closeProductModal();
         openLoginModal();
         return;
     }
@@ -1669,7 +1670,6 @@ function getRecommendations(query) {
     
     let recommendations = [];
     
-    // Category-based recommendations
     if (query.includes('oud') || query.includes('arabic')) {
         recommendations = products.filter(p => 
             (p.notes && (
@@ -1717,7 +1717,6 @@ function getRecommendations(query) {
         ).slice(0, 6);
     }
     
-    // Fallback to popular products
     if (recommendations.length === 0) {
         recommendations = popularProductIds
             .map(id => products.find(p => p.id === id))
@@ -1763,6 +1762,11 @@ function updateCartCount() {
 }
 
 function openCartModal() {
+    if (!isLoggedIn) {
+        openLoginModal();
+        return;
+    }
+    
     if (cart.length === 0) {
         showNotification('Your cart is empty');
         return;
@@ -1889,7 +1893,7 @@ function backToProducts() {
 function toggleProfileMenu() {
     const menu = document.getElementById("profileMenu");
     if (menu) {
-          const isVisible = menu.style.display === "block";
+        const isVisible = menu.style.display === "block";
         menu.style.display = isVisible ? "none" : "block";
         updateProfileMenu();
     }
@@ -1926,15 +1930,29 @@ function loginUser() {
         showNotification("Login successful!");
         closeLoginModal();
         updateProfileMenu();
+        
+        // Clear form
+        if (document.getElementById("username")) document.getElementById("username").value = '';
+        if (document.getElementById("password")) document.getElementById("password").value = '';
     } else {
         showNotification("Please enter both username and password.");
     }
+    
+    return false; // Prevent form submission
 }
 
 function logoutUser() {
     isLoggedIn = false;
+    cart = []; // Clear cart on logout
+    updateCartCount();
     showNotification("You have been logged out.");
     updateProfileMenu();
+    
+    // Hide profile menu
+    const menu = document.getElementById("profileMenu");
+    if (menu) {
+        menu.style.display = "none";
+    }
 }
 
 // Utility functions
@@ -1967,6 +1985,49 @@ style.textContent = `
         from { transform: translateX(100%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
+    
+    .profile-icon {
+        position: relative;
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        border-radius: 50%;
+        background: rgba(255, 215, 0, 0.1);
+        transition: background 0.3s ease;
+    }
+    
+    .profile-icon:hover {
+        background: rgba(255, 215, 0, 0.2);
+    }
+    
+    .profile-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: #1a1a1a;
+        border: 1px solid #ffd700;
+        border-radius: 5px;
+        min-width: 120px;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    
+    .profile-menu button {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: none;
+        border: none;
+        color: #e2e8f0;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+    
+    .profile-menu button:hover {
+        background: rgba(255, 215, 0, 0.1);
+        color: #ffd700;
+    }
 `;
 document.head.appendChild(style);
 
@@ -1976,21 +2037,22 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCartCount();
     updateProfileMenu();
     
-    // Add search event listeners
-    const searchInput = document.getElementById('searchInput');
+// Add search event listeners
+const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('keypress', handleSearchKeyPress);
         searchInput.addEventListener('input', handleSearchInput);
     }
     
-    // Close modals when clicking outside
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal')) {
+    
+// Close modals when clicking outside
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal')) {
             modalQuantity = 1;
         }
         
-        // Close profile menu if clicked outside
-        if (!e.target.closest(".profile-icon") && !e.target.closest("#profileMenu")) {
+// Close profile menu if clicked outside
+ if (!e.target.closest(".profile-icon") && !e.target.closest("#profileMenu")) {
             const profileMenu = document.getElementById("profileMenu");
             if (profileMenu) {
                 profileMenu.style.display = "none";

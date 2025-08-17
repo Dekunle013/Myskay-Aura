@@ -85,7 +85,7 @@
             font-weight: bold;
         }
 
-        /* .profile-icon {
+        .profile-icon {
             font-size: 24px;
             cursor: pointer;
             margin-left: 15px;
@@ -124,7 +124,7 @@
 
         .profile-menu button:hover {
             background: #f0f0f0;
-        } */
+        }
 
         .hero {
             background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect fill="%23000" width="1200" height="800"/><circle fill="%23ffd700" opacity="0.1" cx="200" cy="200" r="100"/><circle fill="%23ffed4a" opacity="0.1" cx="800" cy="300" r="150"/><circle fill="%23ffd700" opacity="0.1" cx="1000" cy="600" r="80"/></svg>');
